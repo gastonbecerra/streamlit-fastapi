@@ -27,6 +27,7 @@ def send_to_api(record):
 
 st.title("Consulta de DOI en CrossRef")
 st.write("https://doi.org/10.24215/16696581e726")
+st.write("http://dx.doi.org/10.22201/fcpys.2448492xe.2024.250.80821")
 doi = st.text_input("Ingrese un DOI:")
 
 if "submission_data" not in st.session_state:

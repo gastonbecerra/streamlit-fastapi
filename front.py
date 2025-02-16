@@ -1,5 +1,6 @@
 import streamlit as st
 import requests
+import json
 
 def get_crossref_data(doi):
     url = f"https://api.crossref.org/works/{doi}"
@@ -28,24 +29,29 @@ st.title("Consulta de DOI en CrossRef")
 st.write("https://doi.org/10.24215/16696581e726")
 doi = st.text_input("Ingrese un DOI:")
 
+if "submission_data" not in st.session_state:
+    st.session_state.submission_data = None
+if "api_response" not in st.session_state:
+    st.session_state.api_response = None
+
 if st.button("Consultar") and doi:
     result = get_crossref_data(doi)
     if result:
-        with st.form("doi_form"):
-            st.write("### Información obtenida")
-            title = st.text_input("Título", result['title'])
-            authors = st.text_input("Autores", result['authors'])
-            journal = st.text_input("Revista", result['journal'])
-            year = st.text_input("Año", str(result['year']))
-            url = st.text_input("URL", result['url'])
-            read = st.checkbox("Leído", value=result["read"])
-            submitted = st.form_submit_button("Guardar en la API")
-            if submitted:
-                result["title"] = title
-                result["authors"] = authors
-                result["journal"] = journal
-                result["year"] = int(year) if year.isdigit() else result["year"]
-                result["url"] = url
-                result["read"] = read
-                response = send_to_api(result)
-                st.write(response)
+        st.session_state.submission_data = result
+
+if st.session_state.submission_data:
+    st.write("### Información obtenida")
+    st.session_state.submission_data["title"] = st.text_input("Título", st.session_state.submission_data["title"])
+    st.session_state.submission_data["authors"] = st.text_input("Autores", st.session_state.submission_data["authors"])
+    st.session_state.submission_data["journal"] = st.text_input("Revista", st.session_state.submission_data["journal"])
+    st.session_state.submission_data["year"] = st.text_input("Año", str(st.session_state.submission_data["year"]))
+    st.session_state.submission_data["url"] = st.text_input("URL", st.session_state.submission_data["url"])
+    st.session_state.submission_data["read"] = st.checkbox("Leído", value=st.session_state.submission_data["read"])
+    
+    if st.button("Confirmar envío"):
+        st.session_state.api_response = send_to_api(st.session_state.submission_data)
+        st.session_state.submission_data = None
+
+if st.session_state.api_response:
+    st.write("### Respuesta de la API:")
+    st.json(st.session_state.api_response)
